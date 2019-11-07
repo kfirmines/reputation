@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<script
+	src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+<!-- ###################################################    -->
+<head>
+<title>Getting Started: Serving Web Content</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<!-- ###################################################    -->
+<body>
+
+	<header class="w3-container w3-light-green">
+		<h1>Reputation</h1>
+	</header>
+
+	<div ng-app="myApp" ng-controller="myCtrl">
+	
+	<p class = "w3-btn w3-purple">Net1 <a href="/api/network?id=Net1">here</a></p>
+	
+	<form class="w3-card w3-padding w3-center" >
+		<input class="w3-input" type="text"  ng-model="device.id"	 required placeholder="Add DeviceId here..">
+		<input class="w3-input" type="text"  ng-model="device.netId" required placeholder="Add NetworkId here..">
+		Auth Type:	<input class="w3-radio" type="radio" ng-model="device.auth" value="Public" 	>Public
+  					<input class="w3-radio" type="radio" ng-model="device.auth" value="wpa"		>WPA	
+	 	<button class="w3-btn w3-padding w3-green" ng-click="putConnection()" >Connect</button>
+	</form>
+	
+	<hr>
+	
+	<button class="w3-btn w3-padding w3-green" ng-click="showNetworks()" >All-Networks</button>
+	
+	<div ng-repeat="x in allNetworks " class="w3-card w3-padding w3-lime">
+		<span class="w3-green">{{ $index + 1 }}</span> 
+		<span>{{x.id}}. Auth type: {{ x.auth }}  Average Bandwith is: {{x.avgThroughput}}</span>
+		<div ng-repeat="d in x.devices " class="w3-border w3-sand"> device: {{ d.device_id }} ({{ d.auth }}) - - bandwidth is: <b>{{d.throughput}}</b>Mbit/sec.</div>
+	</div>
+	
+	<hr>
+	
+	<form class="w3-card w3-padding w3-center">	Choose Network:
+		<select ng-model="selectNet" ng-options="x.id for x in allNetworks" required></select>
+		<select ng-model="selectDevice" ng-options="y.device_id for y in selectNet.devices" required></select>
+		<input 	ng-model="inputThroughput" type="number"  required placeholder="Add throughput here..">Mbit/sec.</input>
+		<button class="w3-btn w3-padding w3-green" ng-click="report()" >Report</button>
+	</form>
+
+	
+<!-- 		
+		<h1>{{allNetworks}}</h1>
+		<h1>{{aNetwork}}:</h1> 
+-->
+
+<!-- 
+		<table class = "w3-card ">
+			<tr ng-repeat="x in allNetworks " class="w3-tr w3-padding w3-lime">
+				<td>{{ $index + 1 }}</td>
+				<td>{{ x.id }}</td>
+				<td>{{ x.auth }}</td>
+				<td ng-repeat="d in x.devices " class="w3-tr w3-padding w3-sand">{{d.device_id }}| {{ d.auth }}</td>
+			</tr>
+		</table>
+ -->
+
+
+	</div>
+
+
+	<!-- ###################################################    -->
+	<script>
+		var app = angular.module('myApp', []);
+		app.controller('myCtrl',function($scope, $http) {
+			
+		    $scope.showNetworks = function() {
+				$http.get("api/network/").then(function(response) {
+					$scope.allNetworks = response.data;
+				});
+		    };
+
+		    $scope.putConnection = function() {
+				$http.put("api/network/connect", {"device_id" : $scope.device.id, "network_id" : $scope.device.netId, "auth": $scope.device.auth }).then(function(response) {
+					$scope.stat = response.data;
+				});
+				$scope.showNetworks();
+			};
+			
+			
+		    $scope.report = function() {	
+				$http.post("api/network/report", {"device_id" : $scope.selectDevice.device_id, "network_id" : $scope.selectNet.id, "throughput": $scope.inputThroughput }).then(function(response) {
+					$scope.stat = response.data;
+				});
+				$scope.showNetworks();
+			};
+			
+
+			//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			$scope.showNetworks();
+		});
+	</script>
+
+</body>
+</html>
